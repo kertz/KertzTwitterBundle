@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://www.symfony-project.org/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.symfony-project.org/schema/dic/services http://www.symfony-project.org/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <!-- parameters used by the php api -->
+        <parameter key="kertz_twitter.api">null</parameter>
+        <parameter key="kertz_twitter.oauth_lib">null</parameter>
+        <parameter key="kertz_twitter.consumer_key">null</parameter>
+        <parameter key="kertz_twitter.consumer_secret">null</parameter>
+        <parameter key="kertz_twitter.callback_url">null</parameter>
+
+        <parameter key="kertz_twitter_api.class">TwitterOAuth</parameter>
+        <parameter key="kertz_twitter_service.class">Kertz\TwitterBundle\Services\Twitter</parameter>
+    </parameters>
+
+  <services>
+    <service id="kertz_twitter.service" class="%kertz_twitter_service.class%" scope="request">
+        <argument type="service" id="kertz_twitter.api"/>
+        <argument type="service" id="session"/>
+        <argument type="service" id="request"/>
+        <argument key="callback_url">%kertz_twitter.callback_url%</argument>
+    </service>
+
+    <!-- This is the base API connect service, injected to the wrapper service -->
+    <service id="kertz_twitter.api" class="%kertz_twitter_api.class%" scope="request">
+        <file>%kertz_twitter.api%</file>
+        <argument key="consumer_key">%kertz_twitter.consumer_key%</argument>
+        <argument key="consumer_secret">%kertz_twitter.consumer_secret%</argument>
+        <argument type="service" id="request.get.oauth_token" />
+        <argument type="service" id="session.get.oauth_token_secret" />
+    </service>
+
+    <!-- Get session and request variables -->
+    <service id="request.get.oauth_token" factory-service="request" factory-method="get" class="%kertz_twitter_api.class%">
+        <argument key="key">oauth_token</argument>
+    </service>
+
+    <service id="session.get.oauth_token_secret" factory-service="session" factory-method="get" class="%kertz_twitter_api.class%">
+        <argument key="key">oauth_token_secret</argument>
+    </service>
+
+  </services>
+
+</container>  

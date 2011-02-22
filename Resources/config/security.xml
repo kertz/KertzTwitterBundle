@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://www.symfony-project.org/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.symfony-project.org/schema/dic/services http://www.symfony-project.org/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="kertz_twitter.auth" class="Kertz\TwitterBundle\Security\Authentication\Provider\TwitterProvider" public="false">
+            <argument type="service" id="kertz_twitter.service" strict="false"/>
+        </service>
+
+        <service id="kertz_twitter.security.authentication.listener"
+                 class="Kertz\TwitterBundle\Security\Firewall\TwitterListener"
+                 parent="security.authentication.listener.abstract"
+                 abstract="true">
+        </service>
+
+        <service id="kertz_twitter.security.authentication.entry_point" class="Kertz\TwitterBundle\Security\EntryPoint\TwitterAuthenticationEntryPoint" public="false" abstract="true">
+            <argument type="service" id="kertz_twitter.service" strict="false"/>
+        </service>
+
+    </services>
+</container>
