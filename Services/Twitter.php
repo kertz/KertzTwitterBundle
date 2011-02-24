@@ -3,34 +3,38 @@ namespace Kertz\TwitterBundle\Services;
 
 use Symfony\Component\HttpFoundation\Session;
 use Symfony\Component\HttpFoundation\Request;
+use \TwitterOAuth;
 
 class Twitter {
 
-    private $connection;
+    private $twitter;
     private $callbackURL;
     private $session;
     private $request;
 
-    public function __construct($connection, Session $session, Request $request, $callbackURL = null){
-        $this->connection = $connection;
+    public function __construct(TwitterOAuth $twitter, Session $session, Request $request, $callbackURL = null)
+    {
+        $this->twitter = $twitter;
         $this->callbackURL = $callbackURL;
         $this->session = $session;
         $this->request = $request;
     }
 
-    public function getLoginUrl(){
+    public function getLoginUrl()
+    {
 		/* Get temporary credentials. */
-		$requestToken = $this->callbackURL ? $this->connection->getRequestToken($this->callbackURL) : $this->connection->getRequestToken();
+		$requestToken = $this->callbackURL ? $this->twitter->getRequestToken($this->callbackURL) : $this->twitter->getRequestToken();
 
         /* Save temporary credentials to session. */
         $this->session->set('oauth_token', $requestToken['oauth_token']);
         $this->session->set('oauth_token_secret', $requestToken['oauth_token_secret']);
         
 		/* If last connection failed don't display authorization link. */
-		switch ($this->connection->http_code) {
+		switch ($this->twitter->http_code)
+        {
 			case 200:
 				/* Build authorize URL and redirect user to Twitter. */
-				$redirectURL = $this->connection->getAuthorizeURL($requestToken);
+				$redirectURL = $this->twitter->getAuthorizeURL($requestToken);
 				return $redirectURL;
 				break;
 			default:
@@ -39,18 +43,20 @@ class Twitter {
 		}
     }
 
-    public function getAccessToken(){
-		/* If the oauth_token is old redirect to the connect page. */
+    public function getAccessToken()
+    {
+		/* Check if the oauth_token is old */
         if($this->session->has('oauth_token'))
         {
-            if ($this->session->get('oauth_token') && ($this->session->get('oauth_token') !== $this->request->get('oauth_token'))) {
+            if ($this->session->get('oauth_token') && ($this->session->get('oauth_token') !== $this->request->get('oauth_token')))
+            {
                 $this->session->remove('oauth_token');
                 return null;
             }
         }
 
 		/* Request access tokens from twitter */
-		$accessToken = $this->connection->getAccessToken($this->request->get('oauth_verifier'));
+		$accessToken = $this->twitter->getAccessToken($this->request->get('oauth_verifier'));
 
         /* Save the access tokens. Normally these would be saved in a database for future use. */
         $this->session->set('access_token', $accessToken['oauth_token']);
@@ -61,10 +67,12 @@ class Twitter {
         !$this->session->has('oauth_token_secret') ?: $this->session->remove('oauth_token_secret', null);
 
 		/* If HTTP response is 200 continue otherwise send to connect page to retry */
-		if (200 == $this->connection->http_code) {
+		if (200 == $this->twitter->http_code)
+        {
 			/* The user has been verified and the access tokens can be saved for future use */
 			return $accessToken;
 		}
+        
 		/* Return null for failure */
 		return null;
     }
